@@ -8,6 +8,7 @@ TagManager:
   - RedPill
   - GreenPill
   - Cube
+  - Enemy
   layers:
   - Default
   - TransparentFX

@@ -22,6 +22,7 @@ public class PlayerMovement : MonoBehaviour
     public int redPillCount = 1;
     public int greenPillCount = 1;
     public int bluePillCount = 1;
+    public GameObject gameOver;
 
     private Vector3 moveDirection = Vector3.zero;
     private float rotationX = 0;
@@ -63,7 +64,7 @@ public class PlayerMovement : MonoBehaviour
         if (other.gameObject.tag == "BluePill")
         {
             print("bluepill");
-            bluePillCount++;
+            jumpCount++; //+skok
             Destroy(other.gameObject);
         }
         else if (other.gameObject.tag == "RedPill")
@@ -75,8 +76,15 @@ public class PlayerMovement : MonoBehaviour
         else if (other.gameObject.tag == "GreenPill")
         {
             print("greenpill");
-            greenPillCount++;
+            greenPillCount++; //teleport
             Destroy(other.gameObject);
+        }
+        else if(other.gameObject.tag == "Enemy")
+        {
+            print("urDed");
+            gameOver.SetActive(true);
+            canMove = false;
+            Cursor.visible = true;
         }
     }
     void PlayerControl()
