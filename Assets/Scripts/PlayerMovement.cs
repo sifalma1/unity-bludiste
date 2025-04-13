@@ -7,6 +7,8 @@ public class PlayerMovement : MonoBehaviour
 {
     public Camera playerCamera;
     public Camera spectatorCamera;
+    public AudioSource munchSound;
+    public GameObject playerModel;
 
     public float walkSpeed = 1f;
     public float runSpeed = 1.5f;
@@ -17,12 +19,15 @@ public class PlayerMovement : MonoBehaviour
     public float defaultHeight = 2f;
     public float crouchHeight = 1f;
     public float crouchSpeed = 3f;
-    public int jumpCount = 3;
-    public float teleportDistance = 1f;
-    public int redPillCount = 1;
-    public int greenPillCount = 1;
-    public int bluePillCount = 1;
+    public int bluePillCount = 10;
+    public float teleportDistance = 0.6f;
+    public int redPillCount = 10;
+    public int greenPillCount = 10;
+    public float invisibilityDuration = 5f;
+    private bool isInvisible = false;
     public GameObject gameOver;
+    public DoorSpawner doorSpawner;
+
 
     private Vector3 moveDirection = Vector3.zero;
     private float rotationX = 0;
@@ -64,27 +69,44 @@ public class PlayerMovement : MonoBehaviour
         if (other.gameObject.tag == "BluePill")
         {
             print("bluepill");
-            jumpCount++; //+skok
+            bluePillCount++; //+skok
+            munchSound.Play();
             Destroy(other.gameObject);
         }
         else if (other.gameObject.tag == "RedPill")
         {
             print("redpill");
             redPillCount++;
+            munchSound.Play();
             Destroy(other.gameObject);
         }
         else if (other.gameObject.tag == "GreenPill")
         {
             print("greenpill");
             greenPillCount++; //teleport
+            munchSound.Play();
             Destroy(other.gameObject);
         }
-        else if(other.gameObject.tag == "Enemy")
+        else if(other.gameObject.tag == "Enemy" && isInvisible == false)
         {
             print("urDed");
             gameOver.SetActive(true);
             canMove = false;
             Cursor.visible = true;
+        }
+        else if (other.gameObject.tag == "UnderTheMap")
+        {
+            print("urDed");
+            gameOver.SetActive(true);
+            canMove = false;
+            Cursor.visible = true;
+        }
+        else if(other.gameObject.tag == "Key")
+        {
+            print("Key Picked up");
+            munchSound.Play();
+            doorSpawner.SpawnDoors();
+            Destroy(other.gameObject);
         }
     }
     void PlayerControl()
@@ -104,10 +126,10 @@ public class PlayerMovement : MonoBehaviour
             Camera.enabled = !Camera.enabled;
         }
 
-        if (Input.GetButton("Jump") && canMove && characterController.isGrounded && jumpCount > 0)
+        if (Input.GetButton("Jump") && canMove && characterController.isGrounded && bluePillCount > 0)
         {
             moveDirection.y = jumpPower;
-            jumpCount--;
+            bluePillCount--;
         }
         else
         {
@@ -126,6 +148,32 @@ public class PlayerMovement : MonoBehaviour
             characterController.height = crouchHeight;
             walkSpeed = crouchSpeed;
             runSpeed = crouchSpeed;
+
+            GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+
+            foreach (GameObject enemy in enemies)
+            {
+                RandomMovement ai = enemy.GetComponent<RandomMovement>();
+                if (ai != null && ai.centrePoint != null)
+                {
+                    ai.centrePoint.localPosition = new Vector3(0, 0.5f, 0);
+                    ai.range = 3f;
+                }
+            }
+        }
+        else if (Input.GetKeyUp(KeyCode.LeftControl))
+        {
+            GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+
+            foreach (GameObject enemy in enemies)
+            {
+                RandomMovement ai = enemy.GetComponent<RandomMovement>();
+                if (ai != null && ai.centrePoint != null)
+                {
+                    ai.centrePoint.localPosition = playerModel.transform.position;
+                    ai.range = 0.1f;
+                }
+            }
         }
         else
         {
@@ -153,6 +201,12 @@ public class PlayerMovement : MonoBehaviour
             transform.position = teleportTarget;
             characterController.enabled = true;
             greenPillCount--;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Q) && redPillCount > 0 && !isInvisible)
+        {
+            StartCoroutine(BecomeInvisible());
+            redPillCount--;
         }
     }
 
@@ -193,4 +247,16 @@ public class PlayerMovement : MonoBehaviour
             characterController.enabled = true;
         }
     }
+    IEnumerator BecomeInvisible()
+    {
+        isInvisible = true;
+        playerModel.SetActive(false);
+
+        // Mùžeš sem pøidat i zvuk nebo efekt
+        yield return new WaitForSeconds(invisibilityDuration);
+
+        playerModel.SetActive(true);
+        isInvisible = false;
+    }
+
 }

@@ -1,13 +1,37 @@
 using UnityEngine;
+using static UnityEditor.PlayerSettings;
 
 public class KeySpawner : MonoBehaviour
 {
+    int mazeSize = 24;
+    float y = 0.3f;
+
+  
+    
     public GameObject keyPrefab;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        Vector3 randomSpawnPos = new Vector3(0, (float)0.3, 0);
-        Instantiate(keyPrefab, randomSpawnPos, Quaternion.identity);
+        int edge = Random.Range(0, 4);
+        int pos = Random.Range(1, mazeSize - 1);
+        Vector3 spawnPos = Vector3.zero;
+
+        switch (edge)
+        {
+            case 0: 
+                spawnPos = new Vector3(0, y, pos);
+                break;
+            case 1: 
+                spawnPos = new Vector3(mazeSize, y, pos);
+                break;
+            case 2: 
+                spawnPos = new Vector3(pos, y, 0);
+                break;
+            case 3: 
+                spawnPos = new Vector3(pos, y, mazeSize);
+                break;
+        }
+        Instantiate(keyPrefab, spawnPos, Quaternion.identity);
     }
 
     // Update is called once per frame

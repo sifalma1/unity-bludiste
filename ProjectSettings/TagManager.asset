@@ -9,6 +9,8 @@ TagManager:
   - GreenPill
   - Cube
   - Enemy
+  - UnderTheMap
+  - Key
   layers:
   - Default
   - TransparentFX
