@@ -8,7 +8,7 @@ public class RandomMovement : MonoBehaviour
 {
     public NavMeshAgent agent;
     public float range;
-    public float targetTime = 5.0f;
+    public float targetTime = 6.0f;
 
     public Transform centrePoint;
 
@@ -21,17 +21,15 @@ public class RandomMovement : MonoBehaviour
     void Update()
     {
         targetTime -= Time.deltaTime;
-        if (agent.remainingDistance <= agent.stoppingDistance || targetTime <= 0.3f)
+        if (targetTime <= 0.3f)
         {
             Vector3 point;
             if (RandomPoint(centrePoint.position, range, out point)) 
             {
-                Debug.DrawRay(point, Vector3.up, Color.blue, 1.0f);
                 agent.SetDestination(point);
             }
-            targetTime = 5.0f;
+            targetTime = 6.0f;
         }
-
     }
 
 

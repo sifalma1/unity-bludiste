@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour
@@ -8,7 +9,14 @@ public class PlayerMovement : MonoBehaviour
     public Camera playerCamera;
     public Camera spectatorCamera;
     public AudioSource munchSound;
+    public AudioSource pickupSound;
+    public AudioSource movementSound;
+    public AudioSource teleportSound;
+    public AudioSource invisSound;
+    public AudioSource runSound;
     public GameObject playerModel;
+    public Collider playerCollider;
+
 
     public float walkSpeed = 1f;
     public float runSpeed = 1.5f;
@@ -27,6 +35,8 @@ public class PlayerMovement : MonoBehaviour
     private bool isInvisible = false;
     public GameObject gameOver;
     public DoorSpawner doorSpawner;
+    public GameObject winScreen;
+
 
 
     private Vector3 moveDirection = Vector3.zero;
@@ -55,59 +65,111 @@ public class PlayerMovement : MonoBehaviour
 
         if (!isSpectator)
         {
+            if (characterController.velocity != Vector3.zero && characterController.isGrounded)
+            {
+                if (Input.GetKey(KeyCode.LeftShift))
+                {
+                    if (!runSound.isPlaying)
+                    {
+                        movementSound.Stop();
+                        runSound.Play();
+                    }
+                }
+                else if (Input.GetKey(KeyCode.LeftControl))
+                {
+                    movementSound.volume = 0.1f;
+                    if (!movementSound.isPlaying)
+                    {
+                        runSound.Stop();
+                        movementSound.Play();
+                    }
+                }
+                else
+                {
+
+                    movementSound.volume = 0.2f;
+                    if (!movementSound.isPlaying)
+                    {
+                        runSound.Stop();
+                        movementSound.Play();
+                    }
+                }
+            }
+            else
+            {
+                runSound.Stop();
+                movementSound.Stop();
+            }
             PlayerControl();
         }
         else
         {
+            runSound.Stop();
+            movementSound.Stop();
             SpectatorControl();
         }
-
     }
     private void OnTriggerEnter(Collider other)
     {
         print(other.name);
         if (other.gameObject.tag == "BluePill")
         {
-            print("bluepill");
             bluePillCount++; //+skok
             munchSound.Play();
             Destroy(other.gameObject);
         }
         else if (other.gameObject.tag == "RedPill")
         {
-            print("redpill");
-            redPillCount++;
+            redPillCount++; //invis
             munchSound.Play();
             Destroy(other.gameObject);
         }
         else if (other.gameObject.tag == "GreenPill")
         {
-            print("greenpill");
             greenPillCount++; //teleport
             munchSound.Play();
             Destroy(other.gameObject);
         }
         else if(other.gameObject.tag == "Enemy" && isInvisible == false)
         {
-            print("urDed");
-            gameOver.SetActive(true);
-            canMove = false;
-            Cursor.visible = true;
+            Die();
         }
         else if (other.gameObject.tag == "UnderTheMap")
         {
-            print("urDed");
-            gameOver.SetActive(true);
-            canMove = false;
-            Cursor.visible = true;
+            Die();
         }
         else if(other.gameObject.tag == "Key")
         {
+            pickupSound.Play();
             print("Key Picked up");
             munchSound.Play();
             doorSpawner.SpawnDoors();
             Destroy(other.gameObject);
         }
+        else if(other.gameObject.tag == "Lock")
+        {
+            Win();
+            Destroy(other.gameObject);
+        }
+    }
+
+    void Die()
+    {
+        print("urDed");
+        gameOver.SetActive(true);
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+        canMove = false;
+    }
+    void Win()
+    {
+        pickupSound.Play();
+        int scena = SceneManager.GetActiveScene().buildIndex;
+        PlayerPrefs.SetInt("Level", scena);
+        winScreen.SetActive(true);
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+        canMove = false;
     }
     void PlayerControl()
     {
@@ -120,6 +182,8 @@ public class PlayerMovement : MonoBehaviour
         float movementDirectionY = moveDirection.y;
 
         moveDirection = (forward * curSpeedX) + (right * curSpeedY);
+
+
 
         if (Input.GetKeyUp(KeyCode.X))
         {
@@ -143,7 +207,7 @@ public class PlayerMovement : MonoBehaviour
             moveDirection.z = 0;
         }
 
-        if (Input.GetKey(KeyCode.LeftControl) && canMove)
+        if (Input.GetKey(KeyCode.LeftControl) && canMove && characterController.isGrounded)
         {
             characterController.height = crouchHeight;
             walkSpeed = crouchSpeed;
@@ -156,8 +220,7 @@ public class PlayerMovement : MonoBehaviour
                 RandomMovement ai = enemy.GetComponent<RandomMovement>();
                 if (ai != null && ai.centrePoint != null)
                 {
-                    ai.centrePoint.localPosition = new Vector3(0, 0.5f, 0);
-                    ai.range = 3f;
+                    ai.range = 4f;
                 }
             }
         }
@@ -170,7 +233,6 @@ public class PlayerMovement : MonoBehaviour
                 RandomMovement ai = enemy.GetComponent<RandomMovement>();
                 if (ai != null && ai.centrePoint != null)
                 {
-                    ai.centrePoint.localPosition = playerModel.transform.position;
                     ai.range = 0.1f;
                 }
             }
@@ -181,8 +243,9 @@ public class PlayerMovement : MonoBehaviour
             walkSpeed = 1f;
             runSpeed = 1.5f;
         }
-
+      
         characterController.Move(moveDirection * Time.deltaTime);
+        
 
         if (canMove)
         {
@@ -190,12 +253,14 @@ public class PlayerMovement : MonoBehaviour
             rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
             playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
             transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
+
         }
 
-        if (Input.GetKeyDown(KeyCode.E) && greenPillCount > 0)
+        if (Input.GetKeyDown(KeyCode.E) && greenPillCount > 0 && characterController.isGrounded)
         {
             Vector3 teleportDirection = playerCamera.transform.forward;
             Vector3 teleportTarget = transform.position + teleportDirection.normalized * teleportDistance;
+            teleportSound.Play();
 
             characterController.enabled = false;
             transform.position = teleportTarget;
@@ -207,24 +272,24 @@ public class PlayerMovement : MonoBehaviour
         {
             StartCoroutine(BecomeInvisible());
             redPillCount--;
+
+
         }
     }
 
     void SpectatorControl()
     {
         float moveSpeed = Input.GetKey(KeyCode.LeftShift) ? 10f : 5f;
-        Vector3 move = new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Jump") - Input.GetAxis("Fire1"), Input.GetAxis("Vertical"));
+        Vector3 move = new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Jump"), Input.GetAxis("Vertical"));
 
         spectatorCamera.transform.position += spectatorCamera.transform.TransformDirection(move) * moveSpeed * Time.deltaTime;
 
         float mouseX = Input.GetAxis("Mouse X") * lookSpeed;
         float mouseY = -Input.GetAxis("Mouse Y") * lookSpeed;
 
-        // Omezíme rotaci nahoru/dolù
         spectatorRotationX += mouseY;
         spectatorRotationX = Mathf.Clamp(spectatorRotationX, -lookXLimit, lookXLimit);
 
-        // Nastavíme rotaci, ale zabráníme rotaci kolem osy Z
         spectatorCamera.transform.rotation = Quaternion.Euler(spectatorRotationX, spectatorCamera.transform.eulerAngles.y + mouseX, 0);
     }
 
@@ -251,10 +316,13 @@ public class PlayerMovement : MonoBehaviour
     {
         isInvisible = true;
         playerModel.SetActive(false);
+        playerCollider.enabled = false;
+        invisSound.Play();
 
-        // Mùžeš sem pøidat i zvuk nebo efekt
         yield return new WaitForSeconds(invisibilityDuration);
 
+        invisSound.Stop();
+        playerCollider.enabled = true;
         playerModel.SetActive(true);
         isInvisible = false;
     }

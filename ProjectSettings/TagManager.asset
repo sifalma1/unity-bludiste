@@ -11,6 +11,8 @@ TagManager:
   - Enemy
   - UnderTheMap
   - Key
+  - MainMenu
+  - Lock
   layers:
   - Default
   - TransparentFX

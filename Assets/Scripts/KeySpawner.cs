@@ -3,7 +3,7 @@ using static UnityEditor.PlayerSettings;
 
 public class KeySpawner : MonoBehaviour
 {
-    int mazeSize = 24;
+    public int mazeSize;
     float y = 0.3f;
 
   
@@ -32,11 +32,5 @@ public class KeySpawner : MonoBehaviour
                 break;
         }
         Instantiate(keyPrefab, spawnPos, Quaternion.identity);
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }
