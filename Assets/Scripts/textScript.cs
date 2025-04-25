@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 
+
 public class textScript : MonoBehaviour
 {
 
@@ -8,8 +9,6 @@ public class textScript : MonoBehaviour
     [SerializeField] TextMeshProUGUI redPill;
     [SerializeField] TextMeshProUGUI greenPill;
 
-    public GameObject player;
-    
     void Start()
     {
         
@@ -22,7 +21,7 @@ public class textScript : MonoBehaviour
         int redPillCount = GameObject.Find("Player").GetComponent<PlayerMovement>().redPillCount;
 
         greenPill.text = "Teleport: " + greenPillCount;
-        redPill.text = "Invisibility: " + redPillCount;
+        redPill.text = "Neviditelnost: " + redPillCount;
         bluePill.text = "Skok: " + bluePillCount;
     }
 }

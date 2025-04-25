@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour
@@ -22,7 +23,7 @@ public class PlayerMovement : MonoBehaviour
     public float runSpeed = 1.5f;
     public float jumpPower = 10f;
     public float gravity = 10f;
-    public float lookSpeed = 2f;
+    public float lookSpeed = 1f;
     public float lookXLimit = 60f;
     public float defaultHeight = 2f;
     public float crouchHeight = 1f;
@@ -36,6 +37,8 @@ public class PlayerMovement : MonoBehaviour
     public GameObject gameOver;
     public DoorSpawner doorSpawner;
     public GameObject winScreen;
+    public GameObject escScreen;
+    
 
 
 
@@ -47,6 +50,7 @@ public class PlayerMovement : MonoBehaviour
 
     private bool canMove = true;
     private bool isSpectator = false;
+    private bool isEscPressed = false;
     void Start()
     {
         characterController = GetComponent<CharacterController>();
@@ -54,11 +58,20 @@ public class PlayerMovement : MonoBehaviour
         Cursor.visible = false;
         spectatorCamera.gameObject.SetActive(false);
         playerCamera.gameObject.SetActive(true);
+        lookSpeed = 1f;
     }
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.X))
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if(winScreen.activeInHierarchy || gameOver.activeInHierarchy)
+            {
+                return;
+            }
+            escPressed();
+        }
+        else if (Input.GetKeyDown(KeyCode.X))
         {
             ToggleSpectatorMode();
         }
@@ -67,15 +80,7 @@ public class PlayerMovement : MonoBehaviour
         {
             if (characterController.velocity != Vector3.zero && characterController.isGrounded)
             {
-                if (Input.GetKey(KeyCode.LeftShift))
-                {
-                    if (!runSound.isPlaying)
-                    {
-                        movementSound.Stop();
-                        runSound.Play();
-                    }
-                }
-                else if (Input.GetKey(KeyCode.LeftControl))
+                if (Input.GetKey(KeyCode.LeftControl))
                 {
                     movementSound.volume = 0.1f;
                     if (!movementSound.isPlaying)
@@ -84,9 +89,16 @@ public class PlayerMovement : MonoBehaviour
                         movementSound.Play();
                     }
                 }
+                else if (Input.GetKey(KeyCode.LeftShift))
+                {
+                    if (!runSound.isPlaying)
+                    {
+                        movementSound.Stop();
+                        runSound.Play();
+                    }
+                }
                 else
                 {
-
                     movementSound.volume = 0.2f;
                     if (!movementSound.isPlaying)
                     {
@@ -109,6 +121,28 @@ public class PlayerMovement : MonoBehaviour
             SpectatorControl();
         }
     }
+     
+    private void escPressed()
+    {
+        if(!isEscPressed) 
+        {
+            escScreen.SetActive(true);
+            Time.timeScale = 0;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            lookSpeed = 0;
+        }
+        else
+        {
+            escScreen.SetActive(false);
+            Time.timeScale = 1f;
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+            lookSpeed = 1f;
+        }
+        isEscPressed = !isEscPressed;
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         print(other.name);
@@ -141,8 +175,6 @@ public class PlayerMovement : MonoBehaviour
         else if(other.gameObject.tag == "Key")
         {
             pickupSound.Play();
-            print("Key Picked up");
-            munchSound.Play();
             doorSpawner.SpawnDoors();
             Destroy(other.gameObject);
         }
@@ -155,7 +187,6 @@ public class PlayerMovement : MonoBehaviour
 
     void Die()
     {
-        print("urDed");
         gameOver.SetActive(true);
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -224,7 +255,7 @@ public class PlayerMovement : MonoBehaviour
                 }
             }
         }
-        else if (Input.GetKeyUp(KeyCode.LeftControl))
+        else
         {
             GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
 
@@ -236,9 +267,6 @@ public class PlayerMovement : MonoBehaviour
                     ai.range = 0.1f;
                 }
             }
-        }
-        else
-        {
             characterController.height = defaultHeight;
             walkSpeed = 1f;
             runSpeed = 1.5f;
