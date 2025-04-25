@@ -8,7 +8,7 @@ public class RandomMovement : MonoBehaviour
 {
     public NavMeshAgent agent;
     public float range;
-    public float targetTime = 6.0f;
+    public float targetTime = 4.0f;
 
     public Transform centrePoint;
 
@@ -28,7 +28,7 @@ public class RandomMovement : MonoBehaviour
             {
                 agent.SetDestination(point);
             }
-            targetTime = 6.0f;
+            targetTime = 4.0f;
         }
     }
 

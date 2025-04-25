@@ -48,7 +48,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   agent: {fileID: 175808715239764675}
   range: 0.1
-  targetTime: 10
+  targetTime: 4
   centrePoint: {fileID: 0}
 --- !u!195 &175808715239764675
 NavMeshAgent:

@@ -15,6 +15,7 @@ public class PlayerMovement : MonoBehaviour
     public AudioSource teleportSound;
     public AudioSource invisSound;
     public AudioSource runSound;
+    public AudioSource deathSound;
     public GameObject playerModel;
     public Collider playerCollider;
 
@@ -38,6 +39,7 @@ public class PlayerMovement : MonoBehaviour
     public DoorSpawner doorSpawner;
     public GameObject winScreen;
     public GameObject escScreen;
+
     
 
 
@@ -59,6 +61,7 @@ public class PlayerMovement : MonoBehaviour
         spectatorCamera.gameObject.SetActive(false);
         playerCamera.gameObject.SetActive(true);
         lookSpeed = 1f;
+        Time.timeScale = 1f;
     }
 
     void Update()
@@ -189,6 +192,7 @@ public class PlayerMovement : MonoBehaviour
     {
         gameOver.SetActive(true);
         Cursor.lockState = CursorLockMode.None;
+        deathSound.Play();
         Cursor.visible = true;
         canMove = false;
     }
@@ -240,10 +244,6 @@ public class PlayerMovement : MonoBehaviour
 
         if (Input.GetKey(KeyCode.LeftControl) && canMove && characterController.isGrounded)
         {
-            characterController.height = crouchHeight;
-            walkSpeed = crouchSpeed;
-            runSpeed = crouchSpeed;
-
             GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
 
             foreach (GameObject enemy in enemies)
@@ -254,6 +254,9 @@ public class PlayerMovement : MonoBehaviour
                     ai.range = 4f;
                 }
             }
+            characterController.height = crouchHeight;
+            walkSpeed = crouchSpeed;
+            runSpeed = crouchSpeed;
         }
         else
         {
